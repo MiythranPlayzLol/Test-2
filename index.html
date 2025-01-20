@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Minecraft World in 3D</title>
+<style>
+body { margin: 0; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/PointerLockControls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/loaders/GLTFLoader.js"></script>
+
+<script>
+let scene, camera, renderer, controls;
+let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, moveUp = false;
+let velocity = new THREE.Vector3();
+let direction = new THREE.Vector3();
+let canJump = false;
+
+function init() {
+// Set up scene
+scene = new THREE.Scene();
+camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Add lighting
+const light = new THREE.AmbientLight(0xffffff, 1);
+scene.add(light);
+
+// Add the Minecraft world model (your .glb from GitHub)
+const loader = new THREE.GLTFLoader();
+loader.load('https://<your-username>.github.io/<repository-name>/untitled.glb', function(gltf) {
+scene.add(gltf.scene);
+});
+
+// Set up controls (movement and look)
+controls = new THREE.PointerLockControls(camera, renderer.domElement);
+document.addEventListener('click', () => {
+controls.lock();
+});
+
+// Add keyboard controls
+document.addEventListener('keydown', handleKeyboard);
+document.addEventListener('keyup', handleKeyboardRelease);
+
+// Handle window resizing
+window.addEventListener('resize', onWindowResize, false);
+
+// Start rendering loop
+animate();
+}
+
+function onWindowResize() {
+camera.aspect = window.innerWidth / window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+requestAnimationFrame(animate);
+controls.update(); // Update the controls for smooth movement
+
+// Move the player
+movePlayer();
+
+// Render the scene
+renderer.render(scene, camera);
+}
+
+function movePlayer() {
+const speed = 0.1;
+const jumpSpeed = 5;
+
+direction.set(0, 0, 0);
+
+if (moveForward) direction.z -= speed;
+if (moveBackward) direction.z += speed;
+if (moveLeft) direction.x -= speed;
+if (moveRight) direction.x += speed;
+
+// Update position
+controls.moveRight(direction.x);
+controls.moveForward(direction.z);
+
+// Handle jumping
+if (canJump && moveUp) {
+velocity.y = jumpSpeed;
+canJump = false;
+}
+}
+
+function handleKeyboard(event) {
+if (event.key === 'w') moveForward = true;
+if (event.key === 's') moveBackward = true;
+if (event.key === 'a') moveLeft = true;
+if (event.key === 'd') moveRight = true;
+if (event.key === ' ') moveUp = true;
+}
+
+function handleKeyboardRelease(event) {
+if (event.key === 'w') moveForward = false;
+if (event.key === 's') moveBackward = false;
+if (event.key === 'a') moveLeft = false;
+if (event.key === 'd') moveRight = false;
+if (event.key === ' ') moveUp = false;
+}
+
+init();
+</script>
+</body>
+</html>
